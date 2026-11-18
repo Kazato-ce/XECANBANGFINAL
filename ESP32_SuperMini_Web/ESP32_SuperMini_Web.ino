@@ -187,6 +187,21 @@ void handleCmd() {
   }
 }
 
+void handleDrive() {
+  float spd = server.hasArg("speed") ? server.arg("speed").toFloat() : 0.0f;
+  float str = server.hasArg("steer") ? server.arg("steer").toFloat() : 0.0f;
+
+  char cmd[80];
+  snprintf(cmd, sizeof(cmd), "DRIVE %.2f %.2f\r\n", spd, str);
+  Serial1.print(cmd);
+
+  snprintf(cmd, sizeof(cmd), "{\"type\":\"command\",\"action\":\"drive\",\"speed\":%.2f,\"steer\":%.2f}\r\n", spd, str);
+  Serial1.print(cmd);
+
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/plain", "OK");
+}
+
 // ──────────────────────────────────────────────
 // SETUP
 // ──────────────────────────────────────────────
@@ -242,6 +257,8 @@ void setup() {
   server.on("/api/data", HTTP_GET, handleGetData);
   server.on("/api/set_pid", HTTP_POST, handleSetPid);
   server.on("/api/cmd", HTTP_POST, handleCmd);
+  server.on("/api/drive", HTTP_POST, handleDrive);
+  server.on("/api/drive", HTTP_GET, handleDrive);
 
   server.begin();
   Serial.println("Web Server da san sang! Mo trinh duyet truy cap IP hoac http://robot.local");

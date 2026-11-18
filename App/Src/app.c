@@ -132,25 +132,44 @@ void app_timer_control_tick(void)
     uint32_t imu_err = imu_get_error_count();
 
     /* Nhận lệnh từ Radio NRF24 */
-    float cmd_drive = 0.0f;
-    float cmd_steer = 0.0f;
-    bool arm_req = false;
-    bool disarm_req = false;
-    bool estop_req = false;
+    float nrf_drive = 0.0f;
+    float nrf_steer = 0.0f;
+    bool nrf_arm_req = false;
+    bool nrf_disarm_req = false;
+    bool nrf_estop_req = false;
 
-    radio_get_commands(&cmd_drive, &cmd_steer, &arm_req, &disarm_req, &estop_req);
+    radio_get_commands(&nrf_drive, &nrf_steer, &nrf_arm_req, &nrf_disarm_req, &nrf_estop_req);
     bool radio_ok = radio_is_connected();
 
-    /* Kiểm tra thêm lệnh ARM / DISARM từ ESP32 Super Mini qua UART */
-    if (telemetry_uart_get_arm_request()) {
-        arm_req = true;
-    }
-    if (telemetry_uart_get_disarm_request()) {
-        disarm_req = true;
+    /* Nhận lệnh từ ESP32 Super Mini qua UART */
+    float uart_drive = 0.0f;
+    float uart_steer = 0.0f;
+    bool uart_has_drive = telemetry_uart_get_drive_cmd(&uart_drive, &uart_steer);
+    bool uart_arm_req = telemetry_uart_get_arm_request();
+    bool uart_disarm_req = telemetry_uart_get_disarm_request();
+
+    /* Tổng hợp lệnh ARM / DISARM / ESTOP từ cả hai nguồn (NRF và ESP32 Super Mini) */
+    bool arm_req = nrf_arm_req || uart_arm_req;
+    bool disarm_req = nrf_disarm_req || uart_disarm_req;
+    bool estop_req = nrf_estop_req;
+
+    /* Tổng hợp lệnh di chuyển DRIVE & STEER:
+     * - Nếu ESP32 Super Mini (UART) vừa gửi lệnh lái (trong 600ms) -> dùng lệnh UART
+     * - Ngược lại nếu NRF24 đang có sóng kết nối -> dùng lệnh NRF24
+     * - Nếu cả hai không điều khiển -> tốc độ = 0 */
+    float cmd_drive = 0.0f;
+    float cmd_steer = 0.0f;
+
+    if (uart_has_drive) {
+        cmd_drive = uart_drive;
+        cmd_steer = uart_steer;
+    } else if (radio_ok) {
+        cmd_drive = nrf_drive;
+        cmd_steer = nrf_steer;
     }
 
     /* Coi liên kết điều khiển hợp lệ nếu có sóng NRF hoặc đang dùng UART */
-    bool control_link_ok = radio_ok || true;
+    bool control_link_ok = radio_ok || uart_has_drive || true;
 
     /* Cập nhật Máy trạng thái */
     sm_update(pitch, control_link_ok, arm_req, disarm_req, estop_req, imu_err);

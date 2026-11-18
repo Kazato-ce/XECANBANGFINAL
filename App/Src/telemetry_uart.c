@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define UART_RX_BUFFER_SIZE     256
 #define UART_TX_BUFFER_SIZE     512
@@ -29,6 +30,10 @@ static uint32_t s_telemetry_seq = 0;
 
 static bool s_req_arm = false;
 static bool s_req_disarm = false;
+
+static volatile float s_uart_drive_cmd = 0.0f;
+static volatile float s_uart_steer_cmd = 0.0f;
+static volatile uint32_t s_uart_last_drive_ms = 0;
 
 static void usart1_gpio_init(void)
 {
@@ -141,6 +146,18 @@ static void process_json_command(const char *line)
         s_req_arm = false;
         uart_send_string("{\"type\":\"ack\",\"ok\":true,\"message\":\"disarmed\"}\r\n");
     }
+    else if (strstr(line, "\"action\":\"drive\"") || strstr(line, "\"type\":\"drive\"")) {
+        const char *p_spd = strstr(line, "\"speed\":");
+        const char *p_str = strstr(line, "\"steer\":");
+        float spd = 0.0f, str = 0.0f;
+        if (p_spd) spd = strtof(p_spd + 8, NULL);
+        if (p_str) str = strtof(p_str + 8, NULL);
+        if (fabsf(spd) > 2.0f) spd /= 1000.0f;
+        if (fabsf(str) > 2.0f) str /= 1000.0f;
+        s_uart_drive_cmd = spd;
+        s_uart_steer_cmd = str;
+        s_uart_last_drive_ms = HAL_GetTick();
+    }
     else if (strstr(line, "\"type\":\"heartbeat\"")) {
         /* Heartbeat acknowledged */
     }
@@ -180,6 +197,22 @@ static void process_text_command(char *line)
         s_req_disarm = true;
         s_req_arm = false;
         uart_send_string("OK DISARM\r\n");
+    }
+    else if (strncmp(line, "DRIVE", 5) == 0) {
+        float spd = 0.0f, str = 0.0f;
+        int n = sscanf(line + 5, "%f %f", &spd, &str);
+        if (n >= 1) {
+            if (fabsf(spd) > 2.0f) spd /= 1000.0f;
+            if (fabsf(str) > 2.0f) str /= 1000.0f;
+            s_uart_drive_cmd = spd;
+            s_uart_steer_cmd = (n >= 2) ? str : 0.0f;
+            s_uart_last_drive_ms = HAL_GetTick();
+        }
+    }
+    else if (strncmp(line, "STOP", 4) == 0) {
+        s_uart_drive_cmd = 0.0f;
+        s_uart_steer_cmd = 0.0f;
+        s_uart_last_drive_ms = HAL_GetTick();
     }
 }
 
@@ -273,6 +306,17 @@ bool telemetry_uart_get_disarm_request(void)
 {
     if (s_req_disarm) {
         s_req_disarm = false;
+        return true;
+    }
+    return false;
+}
+
+bool telemetry_uart_get_drive_cmd(float *drive, float *steer)
+{
+    uint32_t now = HAL_GetTick();
+    if ((now - s_uart_last_drive_ms) < 600) {
+        if (drive) *drive = s_uart_drive_cmd;
+        if (steer) *steer = s_uart_steer_cmd;
         return true;
     }
     return false;

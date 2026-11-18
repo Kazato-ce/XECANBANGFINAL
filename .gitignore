@@ -20,8 +20,10 @@ App_python/snapshots/
 # IDE & Editor files
 .vscode/
 .settings/
+.clangd
 .clangd/
 mx.scratch
+BalancingWii-master/
 
 # OS generated files
 Thumbs.db

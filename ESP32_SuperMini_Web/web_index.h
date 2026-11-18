@@ -75,6 +75,18 @@ const char PAGE_MAIN[] PROGMEM = R"rawliteral(
     .btn-submit { background: var(--accent); color: #0f172a; width: 100%; margin-top: 10px; }
     .btn-submit:hover { background: var(--accent-hover); }
 
+    /* D-Pad Virtual Controller */
+    .dpad-container { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 12px 0; }
+    .dpad-row { display: flex; gap: 10px; justify-content: center; }
+    .btn-dpad {
+      width: 80px; height: 56px; border-radius: 8px; font-weight: 700; font-size: 1.05rem;
+      background: #334155; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      user-select: none; -webkit-user-select: none; cursor: pointer; transition: 0.15s;
+    }
+    .btn-dpad:active { background: var(--accent); color: #0f172a; transform: scale(0.96); }
+    .btn-dpad-stop { background: #475569; }
+    .btn-dpad-stop:active { background: var(--red); color: #fff; }
+
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 10px; }
     .field { display: flex; flex-direction: column; gap: 4px; }
     label { font-size: 0.85rem; color: var(--muted); font-weight: 600; display: flex; justify-content: space-between; }
@@ -143,8 +155,41 @@ const char PAGE_MAIN[] PROGMEM = R"rawliteral(
     <div class="card">
       <div class="card-title">Điều Khiển Trạng Thái Robot</div>
       <div class="btn-group">
-        <button class="btn-arm" onclick="sendCmd('arm')">⚡ BẬT CÂN BẰNG (ARM)</button>
-        <button class="btn-disarm" onclick="sendCmd('disarm')">🛑 TẮT ĐỘNG CƠ (DISARM)</button>
+        <button class="btn-arm" onclick="sendCmd('arm')">⚡ BẬT CÂN BẰNG (ARM - X)</button>
+        <button class="btn-disarm" onclick="sendCmd('disarm')">🛑 TẮT ĐỘNG CƠ (DISARM - Z)</button>
+      </div>
+    </div>
+
+    <!-- Bàn Điều Khiển Xe Di Chuyển (D-Pad & Phím W/A/S/D/Space) -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="card-title">🎮 Bàn Điều Khiển Di Chuyển (Phím W/A/S/D/Space)</div>
+        <div style="font-size: 0.8rem; font-weight: 700; color: var(--accent);" id="lblDriveStatus">DỪNG (0, 0)</div>
+      </div>
+
+      <div class="dpad-container">
+        <div class="dpad-row">
+          <button class="btn-dpad" id="btnFwd" onmousedown="startDrive('fwd')" onmouseup="stopDrive()" ontouchstart="startDrive('fwd')" ontouchend="stopDrive()">▲<span style="font-size:0.65rem">TIẾN (W)</span></button>
+        </div>
+        <div class="dpad-row">
+          <button class="btn-dpad" id="btnLeft" onmousedown="startDrive('left')" onmouseup="stopDrive()" ontouchstart="startDrive('left')" ontouchend="stopDrive()">◀<span style="font-size:0.65rem">TRÁI (A)</span></button>
+          <button class="btn-dpad btn-dpad-stop" onclick="stopDrive()">■<span style="font-size:0.65rem">DỪNG</span></button>
+          <button class="btn-dpad" id="btnRight" onmousedown="startDrive('right')" onmouseup="stopDrive()" ontouchstart="startDrive('right')" ontouchend="stopDrive()">▶<span style="font-size:0.65rem">PHẢI (D)</span></button>
+        </div>
+        <div class="dpad-row">
+          <button class="btn-dpad" id="btnBack" onmousedown="startDrive('back')" onmouseup="stopDrive()" ontouchstart="startDrive('back')" ontouchend="stopDrive()">▼<span style="font-size:0.65rem">LÙI (S)</span></button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 10px;">
+        <div class="field">
+          <label>Tốc độ đặt (Drive): <span id="lblDriveSpd">150</span></label>
+          <input type="range" id="rngDriveSpd" min="50" max="400" step="10" value="150" oninput="document.getElementById('lblDriveSpd').innerText=this.value">
+        </div>
+        <div class="field">
+          <label>Độ nhạy rẽ (Steer): <span id="lblSteerSpd">200</span></label>
+          <input type="range" id="rngSteerSpd" min="50" max="400" step="10" value="200" oninput="document.getElementById('lblSteerSpd').innerText=this.value">
+        </div>
       </div>
     </div>
 
@@ -228,6 +273,64 @@ const char PAGE_MAIN[] PROGMEM = R"rawliteral(
         .then(res => { showToast("Đã gửi lệnh: " + act.toUpperCase()); })
         .catch(err => { showToast("Lỗi gửi lệnh: " + err); });
     }
+
+    /* Logic điều khiển di chuyển xe qua Web & Bàn phím */
+    let driveInterval = null;
+
+    function sendDriveCmd(spd, str) {
+      const lbl = document.getElementById('lblDriveStatus');
+      if (lbl) {
+        lbl.innerText = (spd === 0 && str === 0) ? "DỪNG (0, 0)" : `CHẠY (${spd}, ${str})`;
+      }
+      fetch(`/api/drive?speed=${spd}&steer=${str}`, { method: 'POST' }).catch(()=>{});
+    }
+
+    function startDrive(dir) {
+      const spdVal = parseInt(document.getElementById('rngDriveSpd').value);
+      const strVal = parseInt(document.getElementById('rngSteerSpd').value);
+      let s = 0, st = 0;
+      if (dir === 'fwd') s = spdVal;
+      else if (dir === 'back') s = -spdVal;
+      else if (dir === 'left') st = -strVal;
+      else if (dir === 'right') st = strVal;
+
+      sendDriveCmd(s, st);
+      if (driveInterval) clearInterval(driveInterval);
+      driveInterval = setInterval(() => { sendDriveCmd(s, st); }, 120);
+    }
+
+    function stopDrive() {
+      if (driveInterval) { clearInterval(driveInterval); driveInterval = null; }
+      sendDriveCmd(0, 0);
+    }
+
+    /* Bắt sự kiện bàn phím máy tính W / A / S / D / Space / X / Z */
+    const keysPressed = {};
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if (['w', 's', 'a', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'x', 'z'].includes(k)) {
+        if (!keysPressed[k]) {
+          keysPressed[k] = true;
+          if (k === 'w' || k === 'arrowup') startDrive('fwd');
+          else if (k === 's' || k === 'arrowdown') startDrive('back');
+          else if (k === 'a' || k === 'arrowleft') startDrive('left');
+          else if (k === 'd' || k === 'arrowright') startDrive('right');
+          else if (k === ' ') stopDrive();
+          else if (k === 'x') sendCmd('arm');
+          else if (k === 'z') sendCmd('disarm');
+        }
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      if (keysPressed[k]) {
+        keysPressed[k] = false;
+        if (['w', 's', 'a', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) {
+          stopDrive();
+        }
+      }
+    });
 
     // Chart Canvas setup
     const canvas = document.getElementById('chartCanvas');
