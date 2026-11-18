@@ -7,6 +7,7 @@
 #include "stepper_tmc2208.h"
 #include "ultrasonic_hcsr05.h"
 #include "tof_vl53l0x.h"
+#include "radio_nrf24.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -34,6 +35,7 @@ static bool s_req_disarm = false;
 static volatile float s_uart_drive_cmd = 0.0f;
 static volatile float s_uart_steer_cmd = 0.0f;
 static volatile uint32_t s_uart_last_drive_ms = 0;
+static volatile uint32_t s_last_supermini_rx_ms = 0;
 
 static void usart1_gpio_init(void)
 {
@@ -91,13 +93,19 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
     }
 }
 
-void telemetry_uart_rx_isr(void)
+void telemetry_feed_rx_byte(uint8_t byte)
 {
+    s_last_supermini_rx_ms = HAL_GetTick();
     uint16_t next = (uint16_t)((s_rx_head + 1) % UART_RX_BUFFER_SIZE);
     if (next != s_rx_tail) {
-        s_rx_ring[s_rx_head] = s_rx_byte;
+        s_rx_ring[s_rx_head] = byte;
         s_rx_head = next;
     }
+}
+
+void telemetry_uart_rx_isr(void)
+{
+    telemetry_feed_rx_byte(s_rx_byte);
     HAL_UART_Receive_IT(&huart1, &s_rx_byte, 1);
 }
 
@@ -253,15 +261,24 @@ static void send_telemetry(void)
     VehicleState_t state = sm_get_state();
     FaultReason_t fault = sm_get_fault_reason();
 
-    char buf[280];
+    bool mpu_ok = imu_is_calibrated() && (imu_get_error_count() == 0);
+    uint32_t imu_err = imu_get_error_count();
+    bool nrf_ok = radio_check_hardware(NULL, NULL, NULL);
+    bool spm_ok = telemetry_uart_is_supermini_linked();
+    bool upright = (fabsf(pitch) <= 3.5f);
+
+    char buf[360];
     snprintf(buf, sizeof(buf),
         "{\"type\":\"telemetry\",\"seq\":%lu,\"state\":%d,\"fault\":%d,\"pitch\":%.2f,\"target\":%.2f,\"rate\":%.2f,"
         "\"rpm_l\":%.1f,\"rpm_r\":%.1f,\"kp\":%.2f,\"kd\":%.2f,\"ki\":%.2f,"
-        "\"dist_f\":%u,\"dist_l\":%u,\"dist_r\":%u,\"tof_mm\":%u,\"bat\":14.8}\r\n",
+        "\"dist_f\":%u,\"dist_l\":%u,\"dist_r\":%u,\"tof_mm\":%u,\"bat\":14.8,"
+        "\"mpu_ok\":%s,\"imu_err\":%lu,\"nrf_ok\":%s,\"supermini_ok\":%s,\"upright\":%s}\r\n",
         (unsigned long)s_telemetry_seq++, (int)state, (int)fault,
         pitch, target_pitch, rate,
         left_rpm, right_rpm, kp, kd, ki,
-        (unsigned)dist_f, (unsigned)dist_l, (unsigned)dist_r, (unsigned)tof_mm);
+        (unsigned)dist_f, (unsigned)dist_l, (unsigned)dist_r, (unsigned)tof_mm,
+        mpu_ok ? "true" : "false", (unsigned long)imu_err,
+        nrf_ok ? "true" : "false", spm_ok ? "true" : "false", upright ? "true" : "false");
 
     uart_send_string(buf);
 }
@@ -320,4 +337,9 @@ bool telemetry_uart_get_drive_cmd(float *drive, float *steer)
         return true;
     }
     return false;
+}
+
+bool telemetry_uart_is_supermini_linked(void)
+{
+    return (s_last_supermini_rx_ms > 0 && ((HAL_GetTick() - s_last_supermini_rx_ms) < 2000));
 }
