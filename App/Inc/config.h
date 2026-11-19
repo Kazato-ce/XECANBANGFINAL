@@ -28,7 +28,7 @@
 /* Speed & Acceleration Limits */
 #define STEP_FREQ_MAX_HZ            30000.0f      /* Max pulses/second limit */
 #define STEP_CRUISE_MAX_HZ          8000.0f       /* Tốc độ hành trình di chuyển tối đa (steps/sec) */
-#define STEP_ACCEL_MAX_HZ_PER_S     80000.0f      /* Max pulse acceleration */
+#define STEP_ACCEL_MAX_HZ_PER_S     40000.0f      /* Max pulse acceleration (làm mịn gia tốc, triệt tiêu tiếng gằn máy) */
 #define MAX_TARGET_ANGLE_DEG        12.0f         /* Góc nghiêng tối đa khi di chuyển (tương đương BalancingWii) */
 
 /* ====================================================================
@@ -55,8 +55,8 @@
  * Control System / Balance PID Gains (Placeholder - TODO Tune)
  * ==================================================================== */
 /* TODO tune: Người dùng thay thế hệ số từ mô phỏng */
-#define PID_ANGLE_KP                9.0f         /* Độ nhạy góc nghiêng */
-#define PID_ANGLE_KD                0.85f         /* Giảm chấn theo tốc độ góc */
+#define PID_ANGLE_KP                8.0f          /* Độ nhạy góc nghiêng (giảm nhẹ để triệt tiêu tiếng rít) */
+#define PID_ANGLE_KD                0.55f         /* Giảm chấn theo tốc độ góc (giảm từ 0.85 để hết tiếng ré cao tần) */
 #define PID_ANGLE_KI                0.0f          /* Tích phân góc nghiêng */
 
 #define PID_SPEED_KP                0.35f         /* Vòng ngoài điều khiển vận tốc xe */
