@@ -265,20 +265,21 @@ static void send_telemetry(void)
     uint32_t imu_err = imu_get_error_count();
     bool nrf_ok = radio_check_hardware(NULL, NULL, NULL);
     bool spm_ok = telemetry_uart_is_supermini_linked();
-    bool upright = (fabsf(pitch) <= 3.5f);
+    bool upright = (fabsf(pitch - balance_get_target_offset()) <= ARM_UPRIGHT_ANGLE_DEG);
+    float arm_cd = sm_get_auto_arm_countdown_s();
 
-    char buf[360];
+    char buf[380];
     snprintf(buf, sizeof(buf),
         "{\"type\":\"telemetry\",\"seq\":%lu,\"state\":%d,\"fault\":%d,\"pitch\":%.2f,\"target\":%.2f,\"rate\":%.2f,"
         "\"rpm_l\":%.1f,\"rpm_r\":%.1f,\"kp\":%.2f,\"kd\":%.2f,\"ki\":%.2f,"
         "\"dist_f\":%u,\"dist_l\":%u,\"dist_r\":%u,\"tof_mm\":%u,\"bat\":14.8,"
-        "\"mpu_ok\":%s,\"imu_err\":%lu,\"nrf_ok\":%s,\"supermini_ok\":%s,\"upright\":%s}\r\n",
+        "\"mpu_ok\":%s,\"imu_err\":%lu,\"nrf_ok\":%s,\"supermini_ok\":%s,\"upright\":%s,\"arm_cd\":%.1f}\r\n",
         (unsigned long)s_telemetry_seq++, (int)state, (int)fault,
         pitch, target_pitch, rate,
         left_rpm, right_rpm, kp, kd, ki,
         (unsigned)dist_f, (unsigned)dist_l, (unsigned)dist_r, (unsigned)tof_mm,
         mpu_ok ? "true" : "false", (unsigned long)imu_err,
-        nrf_ok ? "true" : "false", spm_ok ? "true" : "false", upright ? "true" : "false");
+        nrf_ok ? "true" : "false", spm_ok ? "true" : "false", upright ? "true" : "false", arm_cd);
 
     uart_send_string(buf);
 }

@@ -19,7 +19,7 @@
 #define MOTOR_STEPS_PER_REV         (200 * MOTOR_MICROSTEPS) /* 3200 steps/rev */
 
 #define WHEEL_DIAMETER_M            0.065f        /* 65 mm wheel diameter */
-#define WHEEL_DISTANCE_M            0.180f        /* Distance between 2 wheels in meters */
+#define WHEEL_DISTANCE_M            0.200f        /* Distance between 2 wheels in meters */
 
 /* Motor Direction Inversion (Đối xứng 2 bên sườn xe) */
 #define MOTOR_L_DIR_INVERT          0
@@ -32,12 +32,15 @@
 #define MAX_TARGET_ANGLE_DEG        12.0f         /* Góc nghiêng tối đa khi di chuyển (tương đương BalancingWii) */
 
 /* ====================================================================
- * Safety & Thresholds
+ * Safety & Thresholds (Tự động ARM khi giữ ở góc cân bằng 5s)
  * ==================================================================== */
-#define FALL_ANGLE_THRESHOLD_DEG    60.0f         /* Góc nghiêng tối đa -> ngã -> tắt động cơ */
-#define ARM_UPRIGHT_ANGLE_DEG       9.0f          /* Xe phải dựng thẳng trong ngưỡng này mới cho ARM */
+#define FALL_ANGLE_THRESHOLD_DEG    35.0f         /* Góc nghiêng tối đa -> ngã -> tắt động cơ */
+#define ARM_UPRIGHT_ANGLE_DEG       4.5f          /* Ngưỡng góc cân bằng (±4.5 độ quanh điểm cân bằng) */
+#define AUTO_ARM_HOLD_TIME_S        5.0f          /* Giữ xe ở góc cân bằng 5 giây -> TỰ ĐỘNG CHUYỂN SANG ARM */
+#define AUTO_ARM_STABLE_TICKS       ((uint32_t)(AUTO_ARM_HOLD_TIME_S * CONTROL_LOOP_FREQ_HZ)) /* 5s * 200Hz = 1000 chu kỳ */
+#define AUTO_RECOVER_TICKS          100           /* Khi ngã, dựng lại 500 ms -> Tự động về DISARMED */
 #define IMU_MAX_CONSECUTIVE_ERRORS  5             /* Lỗi đọc IMU liên tiếp tối đa -> FAULT */
-#define RADIO_TIMEOUT_MS            1000           /* Mất sóng NRF quá thời gian này -> FAULT/DISARM */
+#define RADIO_TIMEOUT_MS            1000          /* Mất sóng NRF quá thời gian này */
 
 /* ====================================================================
  * IMU (MPU6050) Orientation & Filtering
