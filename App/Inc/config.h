@@ -34,10 +34,10 @@
 /* ====================================================================
  * Safety & Thresholds
  * ==================================================================== */
-#define FALL_ANGLE_THRESHOLD_DEG    35.0f         /* Góc nghiêng tối đa -> ngã -> tắt động cơ */
-#define ARM_UPRIGHT_ANGLE_DEG       4.5f          /* Xe phải dựng thẳng trong ngưỡng này mới cho ARM */
+#define FALL_ANGLE_THRESHOLD_DEG    60.0f         /* Góc nghiêng tối đa -> ngã -> tắt động cơ */
+#define ARM_UPRIGHT_ANGLE_DEG       9.0f          /* Xe phải dựng thẳng trong ngưỡng này mới cho ARM */
 #define IMU_MAX_CONSECUTIVE_ERRORS  5             /* Lỗi đọc IMU liên tiếp tối đa -> FAULT */
-#define RADIO_TIMEOUT_MS            500           /* Mất sóng NRF quá thời gian này -> FAULT/DISARM */
+#define RADIO_TIMEOUT_MS            1000           /* Mất sóng NRF quá thời gian này -> FAULT/DISARM */
 
 /* ====================================================================
  * IMU (MPU6050) Orientation & Filtering
@@ -52,7 +52,7 @@
  * Control System / Balance PID Gains (Placeholder - TODO Tune)
  * ==================================================================== */
 /* TODO tune: Người dùng thay thế hệ số từ mô phỏng */
-#define PID_ANGLE_KP                18.0f         /* Độ nhạy góc nghiêng */
+#define PID_ANGLE_KP                9.0f         /* Độ nhạy góc nghiêng */
 #define PID_ANGLE_KD                0.85f         /* Giảm chấn theo tốc độ góc */
 #define PID_ANGLE_KI                0.0f          /* Tích phân góc nghiêng */
 
