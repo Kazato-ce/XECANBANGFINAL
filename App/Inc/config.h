@@ -34,8 +34,8 @@
 /* ====================================================================
  * Safety & Thresholds (Tự động ARM khi giữ ở góc cân bằng 5s)
  * ==================================================================== */
-#define FALL_ANGLE_THRESHOLD_DEG    35.0f         /* Góc nghiêng tối đa -> ngã -> tắt động cơ */
-#define ARM_UPRIGHT_ANGLE_DEG       4.5f          /* Ngưỡng góc cân bằng (±4.5 độ quanh điểm cân bằng) */
+#define FALL_ANGLE_THRESHOLD_DEG    60.0f         /* Góc nghiêng tối đa -> ngã -> tắt động cơ */
+#define ARM_UPRIGHT_ANGLE_DEG       12.0f         /* Ngưỡng góc cân bằng (±12.0 độ quanh điểm cân bằng) */
 #define AUTO_ARM_HOLD_TIME_S        5.0f          /* Giữ xe ở góc cân bằng 5 giây -> TỰ ĐỘNG CHUYỂN SANG ARM */
 #define AUTO_ARM_STABLE_TICKS       ((uint32_t)(AUTO_ARM_HOLD_TIME_S * CONTROL_LOOP_FREQ_HZ)) /* 5s * 200Hz = 1000 chu kỳ */
 #define AUTO_RECOVER_TICKS          100           /* Khi ngã, dựng lại 500 ms -> Tự động về DISARMED */
