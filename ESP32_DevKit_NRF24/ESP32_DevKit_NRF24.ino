@@ -91,6 +91,7 @@ static bool s_radio_ok = false;
 static bool s_force_tx_immediate = false;
 static bool s_gcs_control_active = false;
 static bool s_adas_enabled = false;
+static bool s_adas_enabled = true;
 
 // Trạng thái điều khiển hiện tại
 static int16_t s_current_drive = 0;     // -1000..1000
@@ -382,6 +383,7 @@ void processCommandLine(String line) {
 
 void handleJoystick(void) {
   if (!ENABLE_HARDWARE_JOYSTICK || !s_joystick_detected) return;
+  if (!s_joystick_detected) return;
 
   // 1. Xử lý nút nhấn SW của Joystick (GPIO 32)
   bool sw_state = digitalRead(PIN_JOY_SW);
