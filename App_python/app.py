@@ -75,6 +75,7 @@ class GroundStationApp:
         self.serial_thread = None
         self.serial_running = False
         self.last_connected_port = None
+        self.adas_enabled = False
         self.adas_enabled = True
         self.auto_reconnect_var = tk.BooleanVar(value=True)
         self.auto_reconnecting = False
@@ -95,6 +96,11 @@ class GroundStationApp:
         self.gamepad_ignore_button_edges = True
         self.gamepad_last_scan_ms = 0.0
         self.gamepad_last_tx_ms = 0.0
+        self.gamepad_last_drive = 0
+        self.gamepad_last_steer = 0
+        self.gamepad_drive_baseline = 0.0
+        self.gamepad_steer_baseline = 0.0
+        self.gamepad_baseline_ready = False
         self.gamepad_last_drive = None
         self.gamepad_last_steer = None
         self._gamepad_poll_after_id = None
@@ -507,6 +513,38 @@ class GroundStationApp:
         self.log_console(f"[Auto-Connect] Đang tự động kết nối cổng: {port}...", "INFO")
         self.connect_serial(target_port=port)
 
+
+    def ping_robot(self):
+        if not self.serial_running or not self.serial_client:
+            self.log_console("[Ping] Chưa kết nối cổng COM của ESP32!", "WARN")
+            return
+        self.send_serial_cmd("PING")
+        self.log_console("[Ping] Đã gửi lệnh PING kiểm tra sóng sang ESP32 DevKit...", "INFO")
+
+    def refresh_com_ports(self):
+        details = get_port_details()
+        labels = [d["label"] for d in details]
+        self.cb_com_ports["values"] = labels
+
+        best_idx = 0
+        for i, d in enumerate(details):
+            if d.get("is_esp"):
+                best_idx = i
+                break
+
+        if labels:
+            self.cb_com_ports.current(best_idx)
+        self.log_console(f"[Serial] Tìm thấy {len(details)} cổng COM. Tự chọn: {labels[best_idx] if labels else 'Không có'}", "INFO")
+
+    def auto_connect_esp32(self):
+        self.refresh_com_ports()
+        port = find_best_esp32_port()
+        if not port:
+            messagebox.showinfo("Tìm cổng COM", "Chưa tìm thấy cổng COM nào cắm vào máy tính!")
+            return
+        self.log_console(f"[Auto-Connect] Đang tự động kết nối cổng: {port}...", "INFO")
+        self.connect_serial(target_port=port)
+
     def toggle_serial(self):
         if self.serial_running:
             self.disconnect_serial(is_unexpected=False)
@@ -533,6 +571,12 @@ class GroundStationApp:
 
             self.serial_thread = threading.Thread(target=self._serial_reader_loop, daemon=True)
             self.serial_thread.start()
+            self._set_adas_state(False)
+            self._send_adas_state(log_state=True)
+            self.cmd_arm()
+            self.robot_state_str = "ARMED"
+            self._update_vehicle_state_widget()
+            self.log_console("[ARM] Đã gửi lệnh ARM mặc định sau khi kết nối.", "SUCCESS")
             self._send_adas_state(log_state=True)
 
             self.root.after(300, self.ping_robot)
@@ -896,6 +940,11 @@ class GroundStationApp:
         self.gamepad_connected = False
         self.gamepad_buttons = [False, False, False, False]
         self.gamepad_ignore_button_edges = True
+        self.gamepad_last_drive = 0
+        self.gamepad_last_steer = 0
+        self.gamepad_drive_baseline = 0.0
+        self.gamepad_steer_baseline = 0.0
+        self.gamepad_baseline_ready = False
         self.gamepad_last_drive = None
         self.gamepad_last_steer = None
 
@@ -947,6 +996,15 @@ class GroundStationApp:
                 self.gamepad_connected = True
                 self.gamepad_buttons = [False, False, False, False]
                 self.gamepad_ignore_button_edges = True
+                self.gamepad_last_drive = 0
+                self.gamepad_last_steer = 0
+                self.gamepad_last_tx_ms = 0.0
+                axis_count = self.gamepad.get_numaxes()
+                baseline_drive = -self.gamepad.get_axis(1) if axis_count > 1 else 0.0
+                baseline_steer = self.gamepad.get_axis(2) if axis_count > 2 else 0.0
+                self.gamepad_drive_baseline = baseline_drive
+                self.gamepad_steer_baseline = baseline_steer
+                self.gamepad_baseline_ready = True
                 self.gamepad_last_drive = None
                 self.gamepad_last_steer = None
                 self.gamepad_last_tx_ms = 0.0
@@ -987,6 +1045,20 @@ class GroundStationApp:
                 steer_cmd = 0
             else:
                 axis_count = self.gamepad.get_numaxes()
+                raw_drive_axis = -self.gamepad.get_axis(1) if axis_count > 1 else 0.0
+                raw_steer_axis = self.gamepad.get_axis(2) if axis_count > 2 else 0.0
+
+                if self.gamepad_baseline_ready:
+                    drive_delta = raw_drive_axis - self.gamepad_drive_baseline
+                    steer_delta = raw_steer_axis - self.gamepad_steer_baseline
+                else:
+                    drive_delta = raw_drive_axis
+                    steer_delta = raw_steer_axis
+
+                drive_delta = max(-1.0, min(1.0, drive_delta))
+                steer_delta = max(-1.0, min(1.0, steer_delta))
+                drive_axis = drive_delta if abs(drive_delta) >= GAMEPAD_DEADZONE else 0.0
+                steer_axis = steer_delta if abs(steer_delta) >= GAMEPAD_DEADZONE else 0.0
                 drive_axis = -self.gamepad.get_axis(1) if axis_count > 1 else 0.0
                 steer_axis = self.gamepad.get_axis(2) if axis_count > 2 else 0.0
                 if abs(drive_axis) < GAMEPAD_DEADZONE:
@@ -1003,6 +1075,15 @@ class GroundStationApp:
             now_ms = time.monotonic() * 1000.0
             changed = (drive_cmd != self.gamepad_last_drive or
                        steer_cmd != self.gamepad_last_steer)
+            gamepad_active = (drive_cmd != 0 or steer_cmd != 0)
+            should_send = changed
+            if gamepad_active and (now_ms - self.gamepad_last_tx_ms) >= DRIVE_REPEAT_MS:
+                should_send = True
+
+            if should_send:
+                self.drive_cmd = drive_cmd
+                self.steer_cmd = steer_cmd
+                if self.serial_running and (gamepad_active or changed):
             if changed or (now_ms - self.gamepad_last_tx_ms) >= DRIVE_REPEAT_MS:
                 self.drive_cmd = drive_cmd
                 self.steer_cmd = steer_cmd
@@ -1294,6 +1375,41 @@ class GroundStationApp:
                 self._drive_axis_deadline[axis] = None
                 self._drive_axis_hold_value[axis] = 0
                 setattr(self, attr, 0)
+
+    def _send_drive_command(self):
+        self._set_drive_from_active_inputs()
+        self.send_serial_cmd(f"DRIVE {self.drive_cmd} {self.steer_cmd}")
+
+    def _start_drive_input(self, token, direction):
+        if self.gamepad_enabled or self._stop_input_active or token in self._active_drive_inputs:
+            return
+
+        self._active_drive_inputs[token] = direction
+        self._send_drive_command()
+        self._schedule_drive_repeat()
+
+    def _repeat_drive_command(self):
+        self._drive_repeat_after_id = None
+        if not self._active_drive_inputs and not any(self._drive_axis_deadline.values()):
+            return
+        self._send_drive_command()
+        self._schedule_drive_repeat()
+
+    def _schedule_drive_repeat(self):
+        if self._drive_repeat_after_id is not None:
+            self.root.after_cancel(self._drive_repeat_after_id)
+            self._drive_repeat_after_id = None
+
+        deadlines = [deadline for deadline in self._drive_axis_deadline.values() if deadline is not None]
+        if not self._active_drive_inputs and not deadlines:
+            return
+
+        delay_ms = DRIVE_REPEAT_MS
+        if not self._active_drive_inputs:
+            remaining_ms = max(1, int((min(deadlines) - time.monotonic()) * 1000.0 + 0.999))
+            delay_ms = min(delay_ms, remaining_ms)
+        self._drive_repeat_after_id = self.root.after(delay_ms, self._repeat_drive_command)
+
 
     def _send_drive_command(self):
         self._set_drive_from_active_inputs()
