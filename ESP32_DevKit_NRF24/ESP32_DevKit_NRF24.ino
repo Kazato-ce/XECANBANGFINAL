@@ -70,7 +70,7 @@
 #define JOY_INVERT_DRIVE        false   // Đặt true nếu gạt tới xe bị lùi
 #define JOY_INVERT_STEER        false   // Đặt true nếu gạt phải xe rẽ trái
 #define JOY_DEADBAND            220     // Vùng chết chống trôi lò xo (~ +-220 trên thang 4096)
-#define ENABLE_HARDWARE_JOYSTICK false  // Đặt false khi không gắn module Joystick vật lý
+#define ENABLE_HARDWARE_JOYSTICK true   // Tự động nhận diện Joystick vật lý nếu cắm (GPIO 34, 35, 32)
 
 #define RADIO_CHANNEL           76      // Kênh RF 2476 MHz (khớp với STM32)
 #define CONTROL_INTERVAL_MS     20      // 50 Hz (20 ms) - Siêu mượt và tức thời!
@@ -90,7 +90,6 @@ static uint32_t s_last_gcs_command_ms = 0;
 static bool s_radio_ok = false;
 static bool s_force_tx_immediate = false;
 static bool s_gcs_control_active = false;
-static bool s_adas_enabled = false;
 static bool s_adas_enabled = true;
 
 // Trạng thái điều khiển hiện tại
@@ -383,7 +382,6 @@ void processCommandLine(String line) {
 
 void handleJoystick(void) {
   if (!ENABLE_HARDWARE_JOYSTICK || !s_joystick_detected) return;
-  if (!s_joystick_detected) return;
 
   // 1. Xử lý nút nhấn SW của Joystick (GPIO 32)
   bool sw_state = digitalRead(PIN_JOY_SW);
