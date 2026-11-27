@@ -1,0 +1,14 @@
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:26:21:clampf	24	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:31:13:motor_set_dir	24	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:38:6:stepper_init	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:74:6:stepper_enable	24	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:95:6:stepper_is_enabled	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:100:6:stepper_stop	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:117:6:stepper_emergency_stop_isr	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:127:6:stepper_set_speed	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:133:13:apply_step_rate	32	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:156:6:stepper_update_ramp	32	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:171:7:stepper_get_speed	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:176:6:motor_get_steps	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:186:13:motor_count_step	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/stepper_tmc2208.c:204:6:stepper_step_isr	24	static
