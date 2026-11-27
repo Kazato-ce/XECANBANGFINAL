@@ -1,0 +1,12 @@
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:25:14:app_clampf	24	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:30:13:app_apply_manual_drive_gain	24	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:44:13:app_get_clearance_cm	32	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:69:13:app_apply_adas_speed_limit	40	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:96:13:app_dwt_init	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:102:13:app_spi2_init	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:120:13:app_timers_init	32	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:159:6:app_init	8	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:188:6:app_loop	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:201:6:app_timer_control_tick	96	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:328:6:app_timer_step_tick	8	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/app.c:334:6:app_gpio_exti_callback	16	static

@@ -1,0 +1,7 @@
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/state_machine.c:13:6:sm_init	8	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/state_machine.c:22:6:sm_update	32	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/state_machine.c:146:16:sm_get_state	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/state_machine.c:151:15:sm_get_fault_reason	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/state_machine.c:156:7:sm_get_auto_arm_countdown_s	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/state_machine.c:164:10:sm_get_upright_stable_count	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/state_machine.c:169:13:sm_get_state_str	16	static
