@@ -1,0 +1,10 @@
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:43:21:clampf	24	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:48:6:balance_init	8	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:63:6:balance_reset	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:83:6:balance_set_pid	32	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:95:6:balance_get_pid	24	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:107:6:balance_set_target_offset	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:114:7:balance_get_target_offset	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:119:7:balance_get_target_pitch_deg	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:124:6:balance_update	136	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/balance.c:304:6:balance_get_motor_speeds	16	static

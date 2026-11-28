@@ -1,0 +1,10 @@
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:30:13:tof_invalidate_sample	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:39:13:tof_read_reg8	32	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:46:13:tof_write_reg8	32	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:53:6:tof_init	24	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:81:6:tof_update	48	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:156:6:tof_is_available	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:161:10:tof_get_distance_mm	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:166:6:tof_is_valid	4	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:171:6:tof_evaluate_cliff	16	static
+C:/Users/USER/Downloads/temp/XECANBANGFINAL-main/App/Src/tof_vl53l0x.c:201:6:tof_is_cliff_detected	4	static
